@@ -6,10 +6,7 @@ int main()
 {
     cout << "\n===== Password Generator =====\n";
 
-    int lenght;
-
-    cout << "Enter your password length: minimum 8 chars: ";
-    cin >> lenght;
+    int length;
 
     string chars =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -18,6 +15,32 @@ int main()
         "!@#$%";
 
     srand(time(0));
+
+    while (true)
+    {
+
+        cout << "Enter password length (min 8): ";
+        cin >> length;
+
+        if (length < 8)
+        {
+            cout << "Password too short! Try again.\n";
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    string password = "";
+
+    for (int i = 0; i < length; i++)
+    {
+        int index = rand() % chars.length();
+        password += chars[index];
+    }
+
+    cout << "\nGenerated Password: " << password << "\n";
 
     cout
         << "\n==============================\n";
