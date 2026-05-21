@@ -1,25 +1,51 @@
 #include <iostream>
 using namespace std;
 
-void add(string titles[], string author[], bool available[], int &totalbooks)
+void add(string titles[], string authors[], bool available[], int &totalBooks)
 {
-    if (totalbooks >= 100)
+    if (totalBooks >= 100)
     {
         cout << "Library storage full!\n";
         return;
     }
 
     cout << "Enter title: ";
-    cin >> titles[totalbooks];
+    cin >> titles[totalBooks];
 
     cout << "Enter author name: ";
-    cin >> author[totalbooks];
+    cin >> authors[totalBooks];
 
-    available[totalbooks] = true;
+    available[totalBooks] = true;
 
-    totalbooks++;
+    totalBooks++;
 
     cout << "Book added successfully!\n";
+}
+void view(string titles[], string authors[], bool available[], int totalBooks)
+{
+    if (totalBooks == 0)
+    {
+        cout << "No books available!\n";
+        return;
+    }
+
+    cout << "===== BOOK LIST =====\n";
+
+    for (int i = 0; i < totalBooks; i++)
+    {
+        cout << "\nBook #" << i + 1 << "\n";
+        cout << "Title : " << titles[i] << "\n";
+        cout << "Author : " << authors[i] << "\n";
+
+        if (available[i])
+        {
+            cout << "Status: Availabel\n";
+        }
+        else
+        {
+            cout << "Status: Borrowed\n";
+        }
+    }
 }
 
 int main()
@@ -27,10 +53,10 @@ int main()
     cout << "===== LIBRARY SYSTEM CONSOLE =====\n";
 
     string titles[100];
-    string author[100];
+    string authors[100];
     bool available[100];
 
-    int totalbooks = 0;
+    int totalBooks = 0;
     int choice;
 
     cout << "\n==================================\n";
