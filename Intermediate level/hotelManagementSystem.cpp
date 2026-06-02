@@ -1,236 +1,171 @@
 #include <iostream>
-#include <vector>
 #include <string>
-#include <algorithm> // For std::find
+#include <vector>
+#include <limits> // Required for numeric_limits
 
 using namespace std;
 
-// --- 1. Guest Class (Represents the customer) ---
-class Guest
+// --- Function to handle input safely ---
+double get_double_input(const string &prompt)
 {
-private:
-    string name;
-    string contact;
-
-public:
-    // Constructor
-    Guest(string n, string c) : name(n), contact(c) {}
-
-    // Getters
-    string getName() const { return name; }
-    string getContact() const { return contact; }
-
-    // Display method
-    void displayGuestInfo() const
+    double value;
+    while (true)
     {
-        cout << "\n--- Guest Information ---" << endl;
-        cout << "Name: " << name << endl;
-        cout << "Contact: " << contact << endl;
-    }
-};
-
-// --- 2. Room Class (Represents a single room) ---
-class Room
-{
-private:
-    int roomNumber;
-    string roomType;
-    double price;
-    bool isBookedStatus; // Changed name slightly to avoid conflict with method name
-    Guest *currentGuest; // Pointer to the guest currently occupying the room
-
-public:
-    // Constructor
-    Room(int num, string type, double p) : roomNumber(num), roomType(type), price(p), isBookedStatus(false), currentGuest(nullptr) {}
-
-    // Getters
-    int getRoomNumber() const { return roomNumber; }
-    string getRoomType() const { return roomType; }
-    double getPrice() const { return price; }
-    bool isBooked() const { return isBookedStatus; }
-
-    // Setter/Mutator
-    void setGuest(Guest *guest)
-    {
-        currentGuest = guest;
-        isBookedStatus = true;
-    }
-
-    void clearBooking()
-    {
-        currentGuest = nullptr;
-        isBookedStatus = false;
-    }
-
-    // Display method
-    void displayDetails() const
-    {
-        cout << "\n=======================================" << endl;
-        cout << "Room Number: " << roomNumber << endl;
-        cout << "Type: " << roomType << endl;
-        cout << "Price per Night: $" << price << endl;
-        cout << "Status: " << (isBookedStatus ? "Booked" : "Vacant") << endl;
-        if (isBookedStatus && currentGuest != nullptr)
+        cout << prompt;
+        if (cin >> value)
         {
-            cout << "Occupied by: " << currentGuest->getName() << endl;
+            return value;
+        }
+        cout << "Invalid input. Please enter a valid number.\n";
+        cin.clear();                                         // Clear error flags
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Discard bad input
+    }
+}
+
+// --- Main Logic ---
+int main()
+{
+    cout << "========================================\n";
+    cout << "     Hotel Room Management System\n";
+    cout << "========================================\n\n";
+
+    // Using vectors to store rooms dynamically
+    vector<string> room_names;
+    vector<int> room_numbers;
+    vector<string> room_statuses; // To track availability
+
+    int num_rooms;
+    cout << "How many rooms do you want to manage? ";
+    if (!(cin >> num_rooms) || num_rooms <= 0)
+    {
+        cerr << "Invalid number of rooms entered. Exiting." << endl;
+        return 1;
+    }
+
+    // 1. Room Setup Phase
+    cout << "\n--- Room Setup ---\n";
+    for (int i = 1; i <= num_rooms; ++i)
+    {
+        string name;
+        int room_num;
+        string status = "Available"; // Start all rooms as available
+
+        cout << "\n--- Room " << i << " ---\n";
+        cout << "Enter Room Name: ";
+        getline(cin >> ws, name); // Use ws to consume any leftover whitespace
+
+        cout << "Enter Room Number (e.g., 101): ";
+        if (!(cin >> room_num))
+        {
+            cerr << "Invalid room number. Skipping this room setup.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        room_names.push_back(name);
+        room_numbers.push_back(room_num);
+        room_statuses.push_back(status); // Storing initial status
+    }
+
+    // 2. Booking Phase
+    cout << "\n--- Booking System ---\n";
+
+    int room_index;
+    string customer_name;
+    int room_to_book;
+
+    while (true)
+    {
+        cout << "\nWhat would you like to do?\n";
+        cout << "1. View Rooms\n";
+        cout << "2. Make a Reservation\n";
+        cout << "3. Exit\n";
+        cout << "Choice: ";
+
+        if (!(cin >> room_index))
+        {
+            cout << "Invalid choice. Please enter a number (1, 2, or 3).\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        if (room_index == 3)
+        {
+            cout << "\nExiting system. Goodbye!\n";
+            break;
+        }
+
+        if (room_index == 1)
+        {
+            cout << "\n--- Current Room List ---\n";
+            if (room_names.empty())
+            {
+                cout << "No rooms have been set up.\n";
+            }
+            else
+            {
+                for (size_t i = 0; i < room_names.size(); ++i)
+                {
+                    cout << "Room #" << room_numbers[i] << ": " << room_names[i]
+                         << " (Status: " << room_statuses[i] << ")\n";
+                }
+            }
+        }
+        else if (room_index == 2)
+        {
+            cout << "\n--- Make a Reservation ---\n";
+
+            // Simple selection for booking
+            cout << "Enter the room number you wish to book: ";
+            if (!(cin >> room_to_book))
+            {
+                cout << "Invalid room number validation failed.\n";
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                continue;
+            }
+
+            // Find the index corresponding to the room number
+            int found_index = -1;
+            for (size_t i = 0; i < room_names.size(); ++i)
+            {
+                if (room_numbers[i] == room_to_book)
+                {
+                    found_index = i;
+                    break;
+                }
+            }
+
+            if (found_index != -1)
+            {
+                string current_status = room_statuses[found_index];
+                if (current_status == "Available")
+                {
+                    cout << "Enter Customer Name: ";
+                    getline(cin >> ws, customer_name);
+
+                    // Update status
+                    room_statuses[found_index] = "Booked by " + customer_name;
+                    cout << "\nSUCCESS! Room " << room_to_book << " (" << room_names[found_index]
+                         << ") is now booked for " << customer_name << ".\n";
+                }
+                else
+                {
+                    cout << "\nERROR! Room " << room_to_book << " is currently " << current_status << ".\n";
+                }
+            }
+            else
+            {
+                cout << "\nERROR! Room number " << room_to_book << " does not exist.\n";
+            }
         }
         else
         {
-            cout << "Occupied by: None" << endl;
+            cout << "\nInvalid choice. Please select 1, 2, or 3.\n";
         }
-        cout << "=======================================" << endl;
     }
-};
-
-// --- 3. Hotel Class (Manages all Rooms and operations) ---
-class Hotel
-{
-private:
-    // Using a vector to store all Room objects (Composition)
-    vector<Room> rooms;
-
-public:
-    // Method to add a new room to the hotel
-    void addRoom(const Room &room)
-    {
-        rooms.push_back(room);
-        cout << "\n[SUCCESS] Room " << room.getRoomNumber() << " added to the hotel." << endl;
-    }
-
-    // Search function to find a room by number
-    Room *findRoom(int roomNum)
-    {
-        for (auto &room : rooms)
-        {
-            if (room.getRoomNumber() == roomNum)
-            {
-                return &room; // Return a pointer to the found room
-            }
-        }
-        return nullptr; // Room not found
-    }
-
-    // Method to book a room
-    bool bookRoom(int roomNum, Guest *guest)
-    {
-        Room *room = findRoom(roomNum);
-
-        if (room == nullptr)
-        {
-            cout << "\n[ERROR] Room " << roomNum << " does not exist." << endl;
-            return false;
-        }
-
-        if (room->isBooked())
-        {
-            cout << "\n[ERROR] Room " << roomNum << " is already booked." << endl;
-            return false;
-        }
-
-        // Successful Booking
-        room->setGuest(guest);
-        cout << "\n[SUCCESS] Room " << roomNum << " successfully booked for " << guest->getName() << "." << endl;
-        return true;
-    }
-
-    // Method to check in a guest safely using a pointer to a persistent Guest object
-    void checkIn(int roomNum, Guest *guest)
-    {
-        Room *room = findRoom(roomNum);
-        if (room == nullptr)
-        {
-            cout << "\n[ERROR] Check-in failed: Room " << roomNum << " not found." << endl;
-            return;
-        }
-
-        if (guest == nullptr)
-        {
-            cout << "\n[ERROR] Check-in failed: Invalid Guest." << endl;
-            return;
-        }
-
-        room->setGuest(guest);
-        cout << "\n[CHECK-IN SUCCESS] Welcome, " << guest->getName() << "! You are now checked into Room " << roomNum << "." << endl;
-    }
-
-    // Method to check out a guest
-    void checkOut(int roomNum)
-    {
-        Room *room = findRoom(roomNum);
-
-        if (room == nullptr)
-        {
-            cout << "\n[ERROR] Check-out failed: Room " << roomNum << " not found." << endl;
-            return;
-        }
-
-        if (!room->isBooked())
-        {
-            cout << "\n[ERROR] Check-out failed: Room " << roomNum << " is currently vacant." << endl;
-            return;
-        }
-
-        // Update status
-        room->clearBooking();
-        cout << "\n[CHECK-OUT SUCCESS] Room " << roomNum << " successfully checked out." << endl;
-    }
-
-    // Display all rooms
-    void displayAllRooms() const
-    {
-        cout << "\n\n=======================================" << endl;
-        cout << "        CURRENT HOTEL ROOMS" << endl;
-        cout << "=======================================" << endl;
-        for (const auto &room : rooms)
-        {
-            room.displayDetails();
-        }
-        cout << "=======================================" << endl;
-    }
-};
-
-// --- Main Execution Function ---
-int main()
-{
-    // 1. Initialize the Hotel
-    Hotel myHotel;
-
-    // 2. Add Rooms to the Hotel
-    myHotel.addRoom(Room(101, "Standard", 50.00));
-    myHotel.addRoom(Room(102, "Deluxe", 85.00));
-    myHotel.addRoom(Room(201, "Suite", 150.00));
-
-    // Display initial state
-    myHotel.displayAllRooms();
-
-    // 3. Define Guests
-    Guest alice("Alice Smith", "alice@example.com");
-    Guest bob("Bob Johnson", "bob@example.com");
-
-    cout << "\n\n--------------------------------------------" << endl;
-    cout << "         STARTING BOOKING PROCESS" << endl;
-    cout << "--------------------------------------------" << endl;
-
-    // 4. Attempt to Book a Room
-    cout << "\nAttempting to book Room 101 for Alice..." << endl;
-    myHotel.bookRoom(101, &alice);
-
-    cout << "\nAttempting to book Room 101 for Bob (Should Fail)..." << endl;
-    myHotel.bookRoom(101, &bob);
-
-    // 5. Check-In Process (Passing address of persistent guest object)
-    cout << "\n--- Simulating Check-In for Alice in Room 101 ---" << endl;
-    myHotel.checkIn(101, &alice);
-
-    // 6. Display updated room details
-    myHotel.displayAllRooms();
-
-    // 7. Check-Out Process
-    cout << "\n--- Simulating Check-Out for Alice from Room 101 ---" << endl;
-    myHotel.checkOut(101);
-
-    // 8. Display final state
-    myHotel.displayAllRooms();
 
     return 0;
 }
